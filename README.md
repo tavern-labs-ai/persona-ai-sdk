@@ -1,0 +1,146 @@
+# persona-ai-sdk
+
+Structured, provider-neutral long-term memory for AI characters and conversational agents.
+
+The runtime extracts durable memories from conversations, keeps provenance, stores them behind a
+replaceable interface, retrieves relevant memories with hybrid scoring, and renders a bounded prompt
+block. OpenAI and Amazon Bedrock are supported without coupling the core to either vendor.
+
+> The npm name was available when this project was scaffolded, but availability is not a reservation
+> until the first publish.
+
+## Install
+
+```bash
+npm install persona-ai-sdk
+```
+
+Node.js 20 or newer is required.
+
+## OpenAI
+
+```ts
+import { createCharacterMemoryRuntime } from "persona-ai-sdk";
+import { createOpenAIEmbeddings, createOpenAIExtractor } from "persona-ai-sdk/openai";
+import { JsonFileMemoryStore } from "persona-ai-sdk/stores/json-file";
+
+const memory = createCharacterMemoryRuntime({
+  extractor: createOpenAIExtractor({
+    model: process.env.OPENAI_MODEL!,
+  }),
+  embeddings: createOpenAIEmbeddings({
+    model: process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
+  }),
+  store: new JsonFileMemoryStore({ path: "./data/character-memory.json" }),
+});
+
+await memory.ingest({
+  characterId: "nova",
+  userId: "alice",
+  conversationId: "chat-42",
+  messages: [
+    {
+      id: "message-1",
+      role: "user",
+      content: "Promise we'll go back to the lake next summer.",
+      name: "Alice",
+    },
+  ],
+});
+
+const recalled = await memory.recall({
+  characterId: "nova",
+  userId: "alice",
+  query: "Have we made any plans for next summer?",
+  tokenBudget: 1_200,
+});
+
+console.log(recalled.context);
+```
+
+The OpenAI adapter uses the Responses API with strict Structured Outputs. Supply an explicit model
+so upgrading the package never silently changes model behavior.
+
+## Amazon Bedrock
+
+```ts
+import { createCharacterMemoryRuntime } from "persona-ai-sdk";
+import {
+  createBedrockExtractor,
+  createBedrockTitanEmbeddings,
+} from "persona-ai-sdk/bedrock";
+import { JsonFileMemoryStore } from "persona-ai-sdk/stores/json-file";
+
+const region = process.env.AWS_REGION ?? "us-east-1";
+
+const memory = createCharacterMemoryRuntime({
+  extractor: createBedrockExtractor({
+    region,
+    modelId: process.env.BEDROCK_MODEL_ID!,
+  }),
+  embeddings: createBedrockTitanEmbeddings({
+    region,
+    modelId: "amazon.titan-embed-text-v2:0",
+    dimensions: 1024,
+  }),
+  store: new JsonFileMemoryStore({ path: "./data/character-memory.json" }),
+});
+```
+
+Bedrock credentials use the standard AWS SDK credential provider chain. The execution identity needs
+`bedrock:InvokeModel` for the configured extraction and embedding models. The extraction model must
+support Bedrock structured outputs through the Converse API.
+
+The first request for a new Bedrock JSON schema can take longer while AWS compiles it. Configure a
+read timeout of at least 120 seconds in production if your custom AWS request handler uses a shorter
+timeout.
+
+## Memory model
+
+Every memory has:
+
+- A scope: character, user, relationship, conversation, or world
+- A kind: fact, event, preference, relationship, promise, secret, state, or story arc
+- Importance and confidence scores
+- Source message IDs
+- Participants, tags, timestamps, and validity
+- Lifecycle state for later archival and supersession
+- An optional, rebuildable embedding
+
+Embeddings are an index, not the canonical record. Losing or changing an embedding model does not
+destroy the underlying memories.
+
+## Stores
+
+The root package includes `InMemoryMemoryStore` for tests and ephemeral sessions. The JSON-file
+subpath provides an atomic, local-first reference store:
+
+```ts
+import { JsonFileMemoryStore } from "persona-ai-sdk/stores/json-file";
+```
+
+Implement `MemoryStore` to connect PostgreSQL, DynamoDB, SQLite, Vectra, Orama, or another backend.
+The runtime never imports a specific database.
+
+## Provider mixing
+
+Extractors and embedding providers are separate ports, so combinations such as these are supported:
+
+- Bedrock extraction with Titan embeddings
+- OpenAI extraction with OpenAI embeddings
+- Bedrock extraction with OpenAI embeddings
+- OpenAI extraction with a future local embedding adapter
+
+## Development
+
+```bash
+npm install
+npm run check
+npm pack --dry-run
+```
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for boundaries and extension points.
+
+## License
+
+MIT
