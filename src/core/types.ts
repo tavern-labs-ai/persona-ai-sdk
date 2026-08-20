@@ -5,6 +5,7 @@ import type {
   MemoryRecord,
   MemoryScope,
   MemoryStatus,
+  MemoryVisibility,
   MessageRole,
 } from "./schema.js";
 
@@ -22,6 +23,7 @@ export interface MemoryExtractor {
 
 export interface EmbeddingProvider {
   readonly provider: string;
+  readonly model: string;
   readonly dimensions: number | undefined;
   embed(texts: readonly string[]): Promise<readonly (readonly number[])[]>;
 }
@@ -30,9 +32,12 @@ export interface MemoryFilters {
   characterId?: string;
   userId?: string | null;
   conversationId?: string;
+  branchId?: string | null;
+  branchIds?: readonly (string | null)[];
   scopes?: readonly MemoryScope[];
   kinds?: readonly MemoryKind[];
   statuses?: readonly MemoryStatus[];
+  visibilities?: readonly MemoryVisibility[];
 }
 
 export interface MemorySearchQuery extends MemoryFilters {
@@ -69,6 +74,7 @@ export interface IngestInput {
   characterId: string;
   userId?: string | null;
   conversationId: string;
+  branchId?: string | null;
   messages: readonly IngestMessage[];
 }
 
@@ -84,12 +90,17 @@ export interface IngestMessage {
 export interface IngestResult {
   created: readonly MemoryRecord[];
   merged: readonly MemoryRecord[];
+  superseded: readonly MemoryRecord[];
+  conflicts: readonly MemoryConflict[];
 }
 
 export interface RecallInput {
   characterId: string;
   userId?: string | null;
   conversationId?: string;
+  branchId?: string | null;
+  viewerCharacterId?: string;
+  includeSecrets?: boolean;
   query: string;
   scopes?: readonly MemoryScope[];
   kinds?: readonly MemoryKind[];
@@ -110,4 +121,45 @@ export interface CharacterMemoryRuntimeOptions {
   now?: () => Date;
   createId?: () => string;
   minimumConfidence?: number;
+  consolidation?: MemoryConsolidationPolicy;
+}
+
+export type ConsolidationAction = "merge" | "supersede" | "keep" | "conflict";
+
+export interface ConsolidationDecision {
+  action: ConsolidationAction;
+  existingId?: string;
+  reason: string;
+  similarity?: number;
+}
+
+export interface MemoryConsolidationPolicy {
+  decide(
+    candidate: MemoryRecord,
+    existing: readonly MemoryRecord[],
+  ): Promise<ConsolidationDecision> | ConsolidationDecision;
+}
+
+export interface MemoryConflict {
+  candidate: MemoryRecord;
+  existing: MemoryRecord;
+  reason: string;
+}
+
+export interface MemoryExport {
+  format: "character-memory-runtime";
+  version: 1;
+  exportedAt: string;
+  records: readonly MemoryRecord[];
+}
+
+export interface MemoryImportResult {
+  imported: number;
+  skipped: number;
+}
+
+export interface ReembedResult {
+  updated: number;
+  provider: string;
+  model: string;
 }
