@@ -15,6 +15,8 @@ export const memoryKinds = [
 
 export const memoryStatuses = ["active", "superseded", "archived"] as const;
 
+export const memoryVisibilities = ["shared", "character_only", "user_only"] as const;
+
 export const messageRoles = ["system", "user", "assistant", "tool"] as const;
 
 export const conversationMessageSchema = z.object({
@@ -34,6 +36,7 @@ export const extractedMemoryCandidateSchema = z.object({
   importance: z.number().min(0).max(1),
   confidence: z.number().min(0).max(1),
   sourceMessageIds: z.array(z.string().min(1)).min(1),
+  knownBy: z.array(z.string().min(1)),
   occurredAt: z.string().nullable(),
   validUntil: z.string().nullable(),
   tags: z.array(z.string().min(1)),
@@ -48,6 +51,8 @@ export const memoryRecordSchema = extractedMemoryCandidateSchema.extend({
   characterId: z.string().min(1),
   userId: z.string().min(1).nullable(),
   conversationId: z.string().min(1),
+  branchId: z.string().min(1).nullable(),
+  visibility: z.enum(memoryVisibilities),
   status: z.enum(memoryStatuses),
   supersedes: z.string().min(1).nullable(),
   createdAt: z.string().datetime(),
@@ -55,6 +60,8 @@ export const memoryRecordSchema = extractedMemoryCandidateSchema.extend({
   lastRecalledAt: z.string().datetime().nullable(),
   recallCount: z.number().int().nonnegative(),
   embedding: z.array(z.number()).nullable(),
+  embeddingProvider: z.string().min(1).nullable(),
+  embeddingModel: z.string().min(1).nullable(),
 });
 
 /**
@@ -93,6 +100,12 @@ export const extractionJsonSchema = {
             items: { type: "string" },
             description: "IDs of messages that directly support the memory.",
           },
+          knownBy: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Characters or users who know this information. For secrets, omit entities who do not know it.",
+          },
           occurredAt: {
             type: ["string", "null"],
             description: "ISO date/time or narrative time when known; otherwise null.",
@@ -114,6 +127,7 @@ export const extractionJsonSchema = {
           "importance",
           "confidence",
           "sourceMessageIds",
+          "knownBy",
           "occurredAt",
           "validUntil",
           "tags",
@@ -133,4 +147,5 @@ export type MemoryRecord = z.infer<typeof memoryRecordSchema>;
 export type MemoryScope = (typeof memoryScopes)[number];
 export type MemoryKind = (typeof memoryKinds)[number];
 export type MemoryStatus = (typeof memoryStatuses)[number];
+export type MemoryVisibility = (typeof memoryVisibilities)[number];
 export type MessageRole = (typeof messageRoles)[number];
