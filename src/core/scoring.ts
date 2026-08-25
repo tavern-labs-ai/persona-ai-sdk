@@ -10,9 +10,14 @@ export function matchesFilters(memory: MemoryRecord, filters: MemoryFilters): bo
   if (filters.conversationId !== undefined && memory.conversationId !== filters.conversationId) {
     return false;
   }
+  if (filters.branchId !== undefined && memory.branchId !== filters.branchId) return false;
+  if (filters.branchIds !== undefined && !filters.branchIds.includes(memory.branchId)) return false;
   if (filters.scopes !== undefined && !filters.scopes.includes(memory.scope)) return false;
   if (filters.kinds !== undefined && !filters.kinds.includes(memory.kind)) return false;
   if (filters.statuses !== undefined && !filters.statuses.includes(memory.status)) return false;
+  if (filters.visibilities !== undefined && !filters.visibilities.includes(memory.visibility)) {
+    return false;
+  }
   return true;
 }
 
