@@ -1,4 +1,5 @@
 export * from "./core/errors.js";
+export * from "./core/lifecycle.js";
 export * from "./core/render.js";
 export * from "./core/runtime.js";
 export * from "./core/schema.js";
