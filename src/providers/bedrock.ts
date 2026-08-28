@@ -99,6 +99,7 @@ const titanEmbeddingResponseSchema = z.object({
 
 export class BedrockTitanEmbeddingProvider implements EmbeddingProvider {
   readonly provider = "bedrock-titan";
+  readonly model: string;
   readonly dimensions: 256 | 512 | 1024;
   readonly #client: BedrockRuntimeClient;
   readonly #modelId: string;
@@ -107,6 +108,7 @@ export class BedrockTitanEmbeddingProvider implements EmbeddingProvider {
   constructor(options: BedrockTitanEmbeddingOptions = {}) {
     this.#client = options.client ?? createClient(options);
     this.#modelId = options.modelId ?? "amazon.titan-embed-text-v2:0";
+    this.model = this.#modelId;
     this.dimensions = options.dimensions ?? 1024;
     this.#normalize = options.normalize ?? true;
   }
