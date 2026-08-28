@@ -63,6 +63,7 @@ export class OpenAIMemoryExtractor implements MemoryExtractor {
 
 export class OpenAIEmbeddingProvider implements EmbeddingProvider {
   readonly provider = "openai";
+  readonly model: string;
   readonly dimensions: number | undefined;
   readonly #client: OpenAI;
   readonly #model: string;
@@ -70,6 +71,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
   constructor(options: OpenAIEmbeddingOptions) {
     this.#client = options.client ?? createClient(options);
     this.#model = options.model;
+    this.model = options.model;
     this.dimensions = options.dimensions;
   }
 
