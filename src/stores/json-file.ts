@@ -12,10 +12,25 @@ import type {
 } from "../core/types.js";
 import { InMemoryMemoryStore } from "./in-memory.js";
 
-const fileSchema = z.object({
+const legacyMemoryRecordSchema = memoryRecordSchema.omit({
+  knownBy: true,
+  branchId: true,
+  visibility: true,
+  embeddingProvider: true,
+  embeddingModel: true,
+});
+
+const fileV1Schema = z.object({
   version: z.literal(1),
+  records: z.array(legacyMemoryRecordSchema),
+});
+
+const fileV2Schema = z.object({
+  version: z.literal(2),
   records: z.array(memoryRecordSchema),
 });
+
+const fileSchema = z.union([fileV1Schema, fileV2Schema]);
 
 export interface JsonFileMemoryStoreOptions {
   path: string;
@@ -110,16 +125,28 @@ export class JsonFileMemoryStore implements MemoryStore {
     const parsed = fileSchema.safeParse(parsedJson);
     if (!parsed.success) {
       throw new StoreFormatError(
-        `Memory store at ${this.path} does not match format version 1: ${z.prettifyError(parsed.error)}`,
+        `Memory store at ${this.path} does not match a supported format: ${z.prettifyError(parsed.error)}`,
       );
     }
 
-    await this.#memory.upsertMany(parsed.data.records);
+    const records =
+      parsed.data.version === 2
+        ? parsed.data.records
+        : parsed.data.records.map((record) => ({
+            ...record,
+            knownBy: record.kind === "secret" ? [record.characterId] : [],
+            branchId: null,
+            visibility:
+              record.kind === "secret" ? ("character_only" as const) : ("shared" as const),
+            embeddingProvider: null,
+            embeddingModel: null,
+          }));
+    await this.#memory.upsertMany(records);
   }
 
   async #flush(): Promise<void> {
     const records = await this.#memory.list();
-    const payload = JSON.stringify({ version: 1, records }, null, this.#pretty ? 2 : undefined);
+    const payload = JSON.stringify({ version: 2, records }, null, this.#pretty ? 2 : undefined);
     const directory = dirname(this.path);
     const temporaryPath = `${this.path}.tmp-${process.pid}-${Date.now()}`;
 
