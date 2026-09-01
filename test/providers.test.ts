@@ -15,6 +15,7 @@ const extractionJson = JSON.stringify({
       importance: 0.8,
       confidence: 0.95,
       sourceMessageIds: ["m1"],
+      knownBy: ["Nova", "Alice"],
       occurredAt: null,
       validUntil: null,
       tags: ["work"],
