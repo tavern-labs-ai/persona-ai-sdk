@@ -16,6 +16,7 @@ const extractor: MemoryExtractor = {
         importance: 0.9,
         confidence: 0.95,
         sourceMessageIds: ["m1"],
+        knownBy: ["Nova", "Alice"],
         occurredAt: null,
         validUntil: null,
         tags: ["lake", "promise"],
@@ -26,6 +27,7 @@ const extractor: MemoryExtractor = {
 
 const embeddings: EmbeddingProvider = {
   provider: "test",
+  model: "test-embedding",
   dimensions: 3,
   async embed(texts) {
     return texts.map((text) => (text.toLocaleLowerCase().includes("lake") ? [1, 0, 0] : [0, 1, 0]));
@@ -113,6 +115,7 @@ describe("CharacterMemoryRuntime", () => {
             importance: 1,
             confidence: 0.1,
             sourceMessageIds: ["invented-message"],
+            knownBy: ["Nova"],
             occurredAt: null,
             validUntil: null,
             tags: [],
