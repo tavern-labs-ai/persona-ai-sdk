@@ -10,6 +10,7 @@ import { ProviderResponseError } from "../core/errors.js";
 import { buildExtractionPrompt, MEMORY_EXTRACTION_INSTRUCTIONS } from "../core/prompt.js";
 import { extractionJsonSchema, extractionResultSchema } from "../core/schema.js";
 import type { EmbeddingProvider, MemoryExtractionInput, MemoryExtractor } from "../core/types.js";
+import type { CharacterModel, CharacterModelRequest } from "../persona/types.js";
 
 export interface BedrockExtractorOptions {
   modelId: string;
@@ -27,6 +28,13 @@ export interface BedrockTitanEmbeddingOptions {
   clientConfig?: BedrockRuntimeClientConfig;
   dimensions?: 256 | 512 | 1024;
   normalize?: boolean;
+}
+
+export interface BedrockCharacterModelOptions {
+  modelId: string;
+  region?: string;
+  client?: BedrockRuntimeClient;
+  clientConfig?: BedrockRuntimeClientConfig;
 }
 
 export class BedrockMemoryExtractor implements MemoryExtractor {
@@ -159,6 +167,66 @@ export class BedrockTitanEmbeddingProvider implements EmbeddingProvider {
   }
 }
 
+export class BedrockCharacterModel implements CharacterModel {
+  readonly provider = "bedrock";
+  readonly model: string;
+  readonly #client: BedrockRuntimeClient;
+
+  constructor(options: BedrockCharacterModelOptions) {
+    this.#client = options.client ?? createClient(options);
+    this.model = options.modelId;
+  }
+
+  async generate(request: CharacterModelRequest) {
+    const messages = request.messages
+      .filter((message) => message.role === "user" || message.role === "assistant")
+      .map((message) => ({
+        role: message.role as "user" | "assistant",
+        content: [{ text: message.content }],
+      }));
+    const response = await this.#client.send(
+      new ConverseCommand({
+        modelId: this.model,
+        system: [{ text: request.instructions }],
+        messages,
+        inferenceConfig: {
+          ...(request.maxOutputTokens === undefined ? {} : { maxTokens: request.maxOutputTokens }),
+          ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
+        },
+      }),
+    );
+    if (response.stopReason !== "end_turn" && response.stopReason !== "stop_sequence") {
+      throw new ProviderResponseError(
+        this.provider,
+        `Character generation ended with stop reason ${response.stopReason}.`,
+      );
+    }
+    const text = response.output?.message?.content
+      ?.map((block) => block.text ?? "")
+      .join("")
+      .trim();
+    if (text === undefined || text.length === 0) {
+      throw new ProviderResponseError(this.provider, "Character generation returned no text.");
+    }
+    return {
+      text,
+      finishReason: response.stopReason,
+      ...(response.usage === undefined
+        ? {}
+        : {
+            usage: {
+              ...(response.usage.inputTokens === undefined
+                ? {}
+                : { inputTokens: response.usage.inputTokens }),
+              ...(response.usage.outputTokens === undefined
+                ? {}
+                : { outputTokens: response.usage.outputTokens }),
+            },
+          }),
+    };
+  }
+}
+
 export function createBedrockExtractor(options: BedrockExtractorOptions): BedrockMemoryExtractor {
   return new BedrockMemoryExtractor(options);
 }
@@ -167,6 +235,12 @@ export function createBedrockTitanEmbeddings(
   options: BedrockTitanEmbeddingOptions = {},
 ): BedrockTitanEmbeddingProvider {
   return new BedrockTitanEmbeddingProvider(options);
+}
+
+export function createBedrockCharacterModel(
+  options: BedrockCharacterModelOptions,
+): BedrockCharacterModel {
+  return new BedrockCharacterModel(options);
 }
 
 function createClient(options: {
