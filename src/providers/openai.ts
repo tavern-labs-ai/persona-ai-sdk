@@ -5,6 +5,7 @@ import { ProviderResponseError } from "../core/errors.js";
 import { buildExtractionPrompt, MEMORY_EXTRACTION_INSTRUCTIONS } from "../core/prompt.js";
 import { extractionJsonSchema, extractionResultSchema } from "../core/schema.js";
 import type { EmbeddingProvider, MemoryExtractionInput, MemoryExtractor } from "../core/types.js";
+import type { CharacterModel, CharacterModelRequest } from "../persona/types.js";
 
 export interface OpenAIExtractorOptions {
   model: string;
@@ -19,6 +20,14 @@ export interface OpenAIEmbeddingOptions {
   client?: OpenAI;
   apiKey?: string;
   baseURL?: string;
+}
+
+export interface OpenAICharacterModelOptions {
+  model: string;
+  client?: OpenAI;
+  apiKey?: string;
+  baseURL?: string;
+  store?: boolean;
 }
 
 export class OpenAIMemoryExtractor implements MemoryExtractor {
@@ -91,12 +100,67 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
   }
 }
 
+export class OpenAICharacterModel implements CharacterModel {
+  readonly provider = "openai";
+  readonly model: string;
+  readonly #client: OpenAI;
+  readonly #store: boolean;
+
+  constructor(options: OpenAICharacterModelOptions) {
+    this.#client = options.client ?? createClient(options);
+    this.model = options.model;
+    this.#store = options.store ?? false;
+  }
+
+  async generate(request: CharacterModelRequest) {
+    const input: OpenAI.Responses.ResponseInput = request.messages.map((message) => ({
+      role:
+        message.role === "system" ? "developer" : message.role === "tool" ? "user" : message.role,
+      content: message.role === "tool" ? `[Tool result]\n${message.content}` : message.content,
+    }));
+    const response = await this.#client.responses.create({
+      model: this.model,
+      instructions: request.instructions,
+      input,
+      store: this.#store,
+      ...(request.maxOutputTokens === undefined
+        ? {}
+        : { max_output_tokens: request.maxOutputTokens }),
+      ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
+    });
+    if (response.status !== "completed" || response.output_text.length === 0) {
+      throw new ProviderResponseError(
+        this.provider,
+        `Character generation ended with status ${response.status}.`,
+      );
+    }
+    return {
+      text: response.output_text,
+      finishReason: response.status,
+      ...(response.usage === undefined
+        ? {}
+        : {
+            usage: {
+              inputTokens: response.usage.input_tokens,
+              outputTokens: response.usage.output_tokens,
+            },
+          }),
+    };
+  }
+}
+
 export function createOpenAIExtractor(options: OpenAIExtractorOptions): OpenAIMemoryExtractor {
   return new OpenAIMemoryExtractor(options);
 }
 
 export function createOpenAIEmbeddings(options: OpenAIEmbeddingOptions): OpenAIEmbeddingProvider {
   return new OpenAIEmbeddingProvider(options);
+}
+
+export function createOpenAICharacterModel(
+  options: OpenAICharacterModelOptions,
+): OpenAICharacterModel {
+  return new OpenAICharacterModel(options);
 }
 
 function createClient(options: { apiKey?: string; baseURL?: string }): OpenAI {
