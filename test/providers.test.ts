@@ -2,8 +2,12 @@ import type { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import type OpenAI from "openai";
 import { describe, expect, it, vi } from "vitest";
 
-import { BedrockMemoryExtractor, BedrockTitanEmbeddingProvider } from "../src/providers/bedrock.js";
-import { OpenAIMemoryExtractor } from "../src/providers/openai.js";
+import {
+  BedrockCharacterModel,
+  BedrockMemoryExtractor,
+  BedrockTitanEmbeddingProvider,
+} from "../src/providers/bedrock.js";
+import { OpenAICharacterModel, OpenAIMemoryExtractor } from "../src/providers/openai.js";
 
 const extractionJson = JSON.stringify({
   memories: [
@@ -99,5 +103,42 @@ describe("provider adapters", () => {
       dimensions: 256,
       normalize: true,
     });
+  });
+
+  it("generates character text through OpenAI Responses", async () => {
+    const create = vi.fn().mockResolvedValue({
+      status: "completed",
+      output_text: "Hello from Nova.",
+      usage: { input_tokens: 10, output_tokens: 4 },
+    });
+    const client = { responses: { create } } as unknown as OpenAI;
+    const model = new OpenAICharacterModel({ model: "test-model", client });
+
+    const response = await model.generate({
+      instructions: "You are Nova.",
+      messages: [{ id: "m1", role: "user", content: "Hello" }],
+    });
+
+    expect(response.text).toBe("Hello from Nova.");
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ store: false }));
+  });
+
+  it("generates character text through Bedrock Converse", async () => {
+    const send = vi.fn().mockResolvedValue({
+      stopReason: "end_turn",
+      output: { message: { content: [{ text: "Hello from Nova." }] } },
+      usage: { inputTokens: 10, outputTokens: 4 },
+    });
+    const client = { send } as unknown as BedrockRuntimeClient;
+    const model = new BedrockCharacterModel({ modelId: "test-model", client });
+
+    const response = await model.generate({
+      instructions: "You are Nova.",
+      messages: [{ id: "m1", role: "user", content: "Hello" }],
+    });
+
+    expect(response.text).toBe("Hello from Nova.");
+    const command = send.mock.calls[0]?.[0] as { input: Record<string, unknown> };
+    expect(command.input).toMatchObject({ modelId: "test-model" });
   });
 });
