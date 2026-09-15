@@ -29,6 +29,10 @@
       "types": "./dist/providers/bedrock.d.ts",
       "import": "./dist/providers/bedrock.js"
     },
+    "./persona": {
+      "types": "./dist/persona/index.d.ts",
+      "import": "./dist/persona/index.js"
+    },
     "./stores/json-file": {
       "types": "./dist/stores/json-file.d.ts",
       "import": "./dist/stores/json-file.js"
