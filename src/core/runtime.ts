@@ -12,6 +12,9 @@ import type {
   CharacterMemoryRuntimeOptions,
   IngestInput,
   IngestResult,
+  CompactInput,
+  CompactResult,
+  ForkBranchInput,
   MemoryExport,
   MemoryFilters,
   MemoryImportResult,
@@ -26,6 +29,7 @@ export class CharacterMemoryRuntime {
   > &
     Pick<CharacterMemoryRuntimeOptions, "embeddings"> & { minimumConfidence: number };
   readonly #consolidation: NonNullable<CharacterMemoryRuntimeOptions["consolidation"]>;
+  readonly #onEvent: CharacterMemoryRuntimeOptions["onEvent"];
 
   constructor(options: CharacterMemoryRuntimeOptions) {
     this.#options = {
@@ -37,6 +41,7 @@ export class CharacterMemoryRuntime {
       ...(options.embeddings === undefined ? {} : { embeddings: options.embeddings }),
     };
     this.#consolidation = options.consolidation ?? new DefaultConsolidationPolicy();
+    this.#onEvent = options.onEvent;
   }
 
   get store() {
@@ -175,7 +180,14 @@ export class CharacterMemoryRuntime {
     }
 
     await this.#options.store.upsertMany([...created, ...merged, ...superseded]);
-    return { created, merged, superseded, conflicts };
+    const result = { created, merged, superseded, conflicts };
+    await this.#onEvent?.({
+      type: "ingest.completed",
+      characterId: input.characterId,
+      conversationId: input.conversationId,
+      result,
+    });
+    return result;
   }
 
   async recall(input: RecallInput): Promise<RecallResult> {
@@ -226,11 +238,18 @@ export class CharacterMemoryRuntime {
       );
     }
 
-    return {
+    const result = {
       memories: rendered.included,
       context: rendered.context,
       estimatedTokens: rendered.estimatedTokens,
     };
+    await this.#onEvent?.({
+      type: "recall.completed",
+      characterId: input.characterId,
+      query: input.query,
+      result,
+    });
+    return result;
   }
 
   async export(filters: MemoryFilters = {}): Promise<MemoryExport> {
@@ -299,6 +318,61 @@ export class CharacterMemoryRuntime {
       provider: this.#options.embeddings.provider,
       model: this.#options.embeddings.model,
     };
+  }
+
+  async forkBranch(input: ForkBranchInput): Promise<number> {
+    const { toBranchId, ...filters } = input;
+    const records = await this.#options.store.list(filters);
+    const timestamp = this.#options.now().toISOString();
+    const copies = records.map((record) => ({
+      ...record,
+      id: this.#options.createId(),
+      branchId: toBranchId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      lastRecalledAt: null,
+      recallCount: 0,
+    }));
+    await this.#options.store.upsertMany(copies);
+    return copies.length;
+  }
+
+  async compact(input: CompactInput): Promise<CompactResult> {
+    const { compactor, minimumRecords = 4, archiveSources = true, ...filters } = input;
+    const records = (await this.#options.store.list({ ...filters, statuses: ["active"] })).filter(
+      (record) => record.kind !== "story_arc",
+    );
+    if (records.length < minimumRecords) return { storyArc: null, archived: 0 };
+    const content = (await compactor.compact(records)).trim();
+    if (content === "") throw new Error("Memory compactor returned an empty story arc.");
+    const timestamp = this.#options.now().toISOString();
+    const first = records[0]!;
+    const storyArc: MemoryRecord = {
+      ...first,
+      id: this.#options.createId(),
+      kind: "story_arc",
+      content,
+      participants: unique(records.flatMap((record) => record.participants)),
+      knownBy: unique(records.flatMap((record) => record.knownBy)),
+      sourceMessageIds: unique(records.flatMap((record) => record.sourceMessageIds)),
+      tags: unique(["compacted", ...records.flatMap((record) => record.tags)]),
+      importance: Math.max(...records.map((record) => record.importance)),
+      confidence: Math.min(...records.map((record) => record.confidence)),
+      status: "active",
+      supersedes: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      lastRecalledAt: null,
+      recallCount: 0,
+      embedding: null,
+      embeddingProvider: null,
+      embeddingModel: null,
+    };
+    const archived = archiveSources
+      ? records.map((record) => ({ ...record, status: "archived" as const, updatedAt: timestamp }))
+      : [];
+    await this.#options.store.upsertMany([storyArc, ...archived]);
+    return { storyArc, archived: archived.length };
   }
 }
 
