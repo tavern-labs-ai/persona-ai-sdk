@@ -122,7 +122,12 @@ export interface CharacterMemoryRuntimeOptions {
   createId?: () => string;
   minimumConfidence?: number;
   consolidation?: MemoryConsolidationPolicy;
+  onEvent?: (event: MemoryRuntimeEvent) => void | Promise<void>;
 }
+
+export type MemoryRuntimeEvent =
+  | { type: "ingest.completed"; characterId: string; conversationId: string; result: IngestResult }
+  | { type: "recall.completed"; characterId: string; query: string; result: RecallResult };
 
 export type ConsolidationAction = "merge" | "supersede" | "keep" | "conflict";
 
@@ -162,4 +167,23 @@ export interface ReembedResult {
   updated: number;
   provider: string;
   model: string;
+}
+
+export interface MemoryCompactor {
+  compact(memories: readonly MemoryRecord[]): Promise<string> | string;
+}
+
+export interface CompactInput extends MemoryFilters {
+  compactor: MemoryCompactor;
+  minimumRecords?: number;
+  archiveSources?: boolean;
+}
+
+export interface CompactResult {
+  storyArc: MemoryRecord | null;
+  archived: number;
+}
+
+export interface ForkBranchInput extends MemoryFilters {
+  toBranchId: string;
 }
