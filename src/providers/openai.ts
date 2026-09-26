@@ -45,6 +45,7 @@ export class OpenAIMemoryExtractor implements MemoryExtractor {
       model: this.#model,
       instructions: MEMORY_EXTRACTION_INSTRUCTIONS,
       input: buildExtractionPrompt(input),
+      store: false,
       text: {
         format: {
           type: "json_schema",
