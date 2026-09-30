@@ -145,4 +145,56 @@ describe("CharacterMemoryRuntime", () => {
 
     expect(result.created).toEqual([]);
   });
+
+  it("forks branch state and compacts old records into a story arc", async () => {
+    let nextId = 0;
+    const multiExtractor: MemoryExtractor = {
+      provider: "test",
+      async extract(input) {
+        return input.messages.map((message, index) => ({
+          scope: "conversation" as const,
+          kind: "event" as const,
+          content: `Event ${index}: ${message.content}`,
+          participants: ["Nova"],
+          importance: 0.6,
+          confidence: 0.9,
+          sourceMessageIds: [message.id],
+          knownBy: ["nova"],
+          occurredAt: null,
+          validUntil: null,
+          tags: ["scene"],
+        }));
+      },
+    };
+    const runtime = createCharacterMemoryRuntime({
+      extractor: multiExtractor,
+      store: new InMemoryMemoryStore(),
+      createId: () => `generated-${++nextId}`,
+      now: () => new Date("2026-01-01T00:00:00.000Z"),
+    });
+    await runtime.ingest({
+      characterId: "nova",
+      conversationId: "chat-1",
+      branchId: "main",
+      messages: ["one", "two", "three", "four"].map((content, index) => ({
+        id: `m${index}`,
+        role: "user" as const,
+        content,
+      })),
+    });
+
+    expect(
+      await runtime.forkBranch({ characterId: "nova", branchId: "main", toBranchId: "alternate" }),
+    ).toBe(4);
+    const compacted = await runtime.compact({
+      characterId: "nova",
+      branchId: "main",
+      compactor: { compact: (memories) => `A four-part scene: ${memories.length} events.` },
+    });
+    expect(compacted.storyArc?.kind).toBe("story_arc");
+    expect(compacted.archived).toBe(4);
+    expect(await runtime.store.list({ branchId: "alternate", statuses: ["active"] })).toHaveLength(
+      4,
+    );
+  });
 });
