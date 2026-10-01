@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Character Runtime Studio</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Character Runtime Studio</h1>
+        <p>A build-free control panel for the service adapter.</p>
+      </header>
+      <section class="connection">
+        <input id="endpoint" value="http://localhost:8787" aria-label="Service URL" />
+        <input id="key" type="password" placeholder="API key" aria-label="API key" />
+        <button id="refresh">Connect</button>
+      </section>
+      <div class="grid">
+        <section>
+          <h2>Personas</h2>
+          <select id="personas" size="8"></select
+          ><button id="remove">Delete selected</button>
+        </section>
+        <section>
+          <h2>Import manifest</h2>
+          <textarea id="manifest" placeholder="Paste a PersonaManifest JSON object"></textarea
+          ><button id="save">Save persona</button>
+        </section>
+        <section>
+          <h2>Test conversation</h2>
+          <input id="conversation" value="studio-preview" aria-label="Conversation ID" /><textarea
+            id="message"
+            placeholder="Message"
+          ></textarea
+          ><button id="send">Send</button>
+          <pre id="output"></pre>
+        </section>
+      </div>
+      <p id="status" role="status"></p>
+    </main>
+    <script type="module" src="studio.js"></script>
+  </body>
+</html>
