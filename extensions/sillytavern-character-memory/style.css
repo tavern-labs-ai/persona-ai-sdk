@@ -1,0 +1,9 @@
+.character-memory-settings .inline-drawer-content {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.character-memory-settings label {
+  display: grid;
+  gap: 0.25rem;
+}

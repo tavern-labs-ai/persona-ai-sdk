@@ -1,0 +1,12 @@
+{
+  "display_name": "Character Memory Runtime",
+  "loading_order": 50,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "persona-ai-sdk contributors",
+  "version": "0.1.0",
+  "homePage": "https://www.npmjs.com/package/persona-ai-sdk",
+  "auto_update": false
+}
