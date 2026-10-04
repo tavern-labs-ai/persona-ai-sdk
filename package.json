@@ -12,7 +12,6 @@
     "llm"
   ],
   "license": "MIT",
-  "author": "",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -33,6 +32,18 @@
       "types": "./dist/persona/index.d.ts",
       "import": "./dist/persona/index.js"
     },
+    "./sillytavern": {
+      "types": "./dist/sillytavern/index.d.ts",
+      "import": "./dist/sillytavern/index.js"
+    },
+    "./service": {
+      "types": "./dist/service/index.d.ts",
+      "import": "./dist/service/index.js"
+    },
+    "./evaluation": {
+      "types": "./dist/evaluation/index.d.ts",
+      "import": "./dist/evaluation/index.js"
+    },
     "./stores/json-file": {
       "types": "./dist/stores/json-file.d.ts",
       "import": "./dist/stores/json-file.js"
@@ -47,7 +58,9 @@
     "README.md",
     "ARCHITECTURE.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "extensions",
+    "examples"
   ],
   "sideEffects": false,
   "engines": {
