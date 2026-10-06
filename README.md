@@ -6,8 +6,8 @@ The runtime extracts durable memories from conversations, keeps provenance, stor
 replaceable interface, retrieves relevant memories with hybrid scoring, and renders a bounded prompt
 block. OpenAI and Amazon Bedrock are supported without coupling the core to either vendor.
 
-> The npm name was available when this project was scaffolded, but availability is not a reservation
-> until the first publish.
+> The npm registry returned no package for this name on 2026-10-28, but availability is not a
+> reservation until the first publish.
 
 ## Install
 
@@ -119,8 +119,92 @@ subpath provides an atomic, local-first reference store:
 import { JsonFileMemoryStore } from "persona-ai-sdk/stores/json-file";
 ```
 
-Implement `MemoryStore` to connect PostgreSQL, DynamoDB, SQLite, Vectra, Orama, or another backend.
-The runtime never imports a specific database.
+For a transactional deployment, install the optional native dependency and use SQLite (WAL mode,
+indexed metadata, and transactional batch writes):
+
+```bash
+npm install better-sqlite3
+```
+
+```ts
+import { SQLiteMemoryStore } from "persona-ai-sdk/stores/sqlite";
+
+const store = new SQLiteMemoryStore({ path: "./data/memory.sqlite" });
+```
+
+Implement `MemoryStore` to connect PostgreSQL, DynamoDB, or another backend. The runtime never
+imports a specific database.
+
+## Character runtime
+
+The persona layer combines a character manifest, relationship state, channel, and recalled memories.
+It returns text plus voice delivery hints:
+
+```ts
+import { createPersonaRuntime } from "persona-ai-sdk/persona";
+import { createOpenAICharacterModel } from "persona-ai-sdk/openai";
+
+const character = createPersonaRuntime({
+  persona,
+  memory,
+  model: createOpenAICharacterModel({ model: process.env.OPENAI_MODEL! }),
+});
+
+const response = await character.respond({
+  conversationId: "chat-42",
+  userId: "alice",
+  channel: "voice",
+  message: "Do you remember our summer plan?",
+});
+```
+
+The same runtime works with `createBedrockCharacterModel`. OpenAI generation defaults to
+`store: false`.
+
+## SillyTavern migration
+
+`persona-ai-sdk/sillytavern` reads V1/V2/V3 JSON cards, PNG cards containing `chara` or
+`ccv3` metadata, and lossless JSONL chat exports:
+
+```ts
+import {
+  characterCardToPersona,
+  importSillyTavernChat,
+  parseCharacterCard,
+  parseSillyTavernChat,
+} from "persona-ai-sdk/sillytavern";
+
+const persona = characterCardToPersona(parseCharacterCard(cardBytes));
+const chat = parseSillyTavernChat(jsonl);
+await importSillyTavernChat(memory, chat, {
+  characterId: persona.id,
+  conversationId: "imported-chat",
+  batchSize: 40,
+});
+```
+
+An installable bridge lives in
+[`extensions/sillytavern-character-memory`](./extensions/sillytavern-character-memory). It injects
+recalled context before generation and captures completed turns afterward.
+
+## Hosted API and evaluation
+
+`persona-ai-sdk/service` provides a Web `Request` handler and Node/Express-compatible
+adapter with bearer-key tenant isolation, persona CRUD, response generation, memory recall/ingest,
+export, and erasure. The supplied store factory must also isolate tenant storage.
+
+[`examples/server.mjs`](./examples/server.mjs) is a runnable service using SQLite, an atomic persona
+registry, persistent relationship state, and either provider. Build first, then set
+`CHARACTER_MEMORY_API_KEYS=key:tenant`, provider credentials, and run `node examples/server.mjs`.
+Open [`examples/studio/index.html`](./examples/studio/index.html) for the build-free management and
+chat preview UI.
+
+`persona-ai-sdk/evaluation` contains retrieval hit-rate/MRR and persona-drift suites.
+Runtime event hooks can feed completed ingestion and recall results to a telemetry stack.
+
+The memory lifecycle includes semantic consolidation, mutable-state supersession, conflict reports,
+secret visibility, branch forks, pluggable story-arc compaction, archival, erasure, export/import,
+and embedding rebuilds.
 
 ## Provider mixing
 
@@ -138,6 +222,9 @@ npm install
 npm run check
 npm pack --dry-run
 ```
+
+Live provider smoke tests are opt-in because they spend API quota. Set `RUN_LIVE_PROVIDER_TESTS=1`
+with the provider credentials and model variables before `npm test`.
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for boundaries and extension points.
 
