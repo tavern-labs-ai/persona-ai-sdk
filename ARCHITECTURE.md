@@ -11,6 +11,9 @@ The dependency rule is:
 application
     |
     v
+persona runtime ---> character model <--- OpenAI / Bedrock adapters
+    |
+    v
 memory runtime ---> extractor port <--- OpenAI / Bedrock adapters
     |
     +------------> embedding port <--- OpenAI / Titan adapters
@@ -29,7 +32,7 @@ depend inward on core contracts.
 
 - The canonical memory schema and lifecycle
 - Extraction and embedding ports
-- Ingestion, provenance validation, and exact deduplication
+- Ingestion, provenance validation, consolidation, and lifecycle controls
 - Retrieval constraints and prompt-budget packing
 - Provider-independent errors
 
@@ -54,6 +57,8 @@ runtime validation protects domain constraints and produces stable errors.
 - `InMemoryMemoryStore` is deterministic and intended for tests or short-lived processes.
 - `JsonFileMemoryStore` is a local reference adapter with versioned files, serialized writes, and
   temporary-file replacement.
+- `SQLiteMemoryStore` uses WAL mode, indexes, and transactional batch writes for durable
+  deployments.
 
 The store persists complete canonical records. Vectors can always be regenerated from `content`.
 
@@ -65,7 +70,7 @@ messages
   -> provider extraction
   -> validate schema and source-message provenance
   -> discard low-confidence candidates
-  -> exact normalized deduplication
+  -> consolidation (merge, supersede, conflict, or keep)
   -> generate embeddings for new records
   -> batch persistence
 ```
@@ -73,9 +78,8 @@ messages
 The runtime never accepts a source message ID invented by a model. Candidates with no remaining
 valid provenance are discarded.
 
-Exact duplicate merging is intentionally conservative. Semantic consolidation and contradiction
-resolution should be added as a separate policy component rather than hidden inside a database
-adapter.
+Consolidation is a replaceable policy rather than database behavior. The default policy merges
+normalized/semantic duplicates, supersedes mutable state, and surfaces contradictions to the caller.
 
 ## Recall lifecycle
 
@@ -97,8 +101,8 @@ should place the resulting block in contextual data, never above their security 
 `characterId` is required on every operation. `userId` defaults to `null` and is included in
 retrieval filters. Applications should use opaque stable IDs, not mutable display names.
 
-Future multi-tenant stores must add tenant or workspace isolation outside this package or extend the
-store contract before accepting untrusted customers. Do not encode tenancy only in vector metadata.
+The service adapter resolves API keys to tenant IDs, but its store factory must also provide
+physical or logical tenant partitioning. Do not encode tenancy only in vector metadata.
 
 ## Failure behavior
 
@@ -108,17 +112,12 @@ store contract before accepting untrusted customers. Do not encode tenancy only 
 - File writes are serialized and atomically replaced.
 - Empty conversations and empty recalls are valid and return empty results.
 
-## Planned extension points
+## Higher layers
 
-The next layers should be introduced as ports rather than provider-specific branches:
-
-1. Consolidation policy for semantic duplicates and superseded state
-2. Story-arc compression and canonical summaries
-3. Per-character knowledge and secret visibility rules
-4. Checkpoint and branch namespaces
-5. SQLite/PostgreSQL/DynamoDB adapters
-6. Character Card and SillyTavern chat importers
-7. Retrieval and character-drift evaluation harnesses
+`src/persona` owns manifests, prompt compilation, relationship state, delivery hints, and response
+orchestration. `src/service` wraps persona runtimes in tenant-aware HTTP routes. `src/sillytavern`
+is a compatibility boundary, so card fields do not leak into the canonical schema. `src/evaluation`
+measures retrieval hit rate/MRR and aggregates deterministic drift checks.
 
 ## Package exports
 
@@ -130,6 +129,11 @@ persona-ai-sdk
 persona-ai-sdk/openai
 persona-ai-sdk/bedrock
 persona-ai-sdk/stores/json-file
+persona-ai-sdk/stores/sqlite
+persona-ai-sdk/persona
+persona-ai-sdk/sillytavern
+persona-ai-sdk/service
+persona-ai-sdk/evaluation
 ```
 
 This prevents browser or edge consumers from loading AWS and filesystem code accidentally and gives
