@@ -14,3 +14,5 @@ All notable changes to this project will be documented here.
 - Add a portable persona runtime and OpenAI/Bedrock character generation adapters.
 - Add Character Card and SillyTavern JSONL migration utilities plus an extension bridge.
 - Add tenant-aware Web/Node service handlers and retrieval/persona evaluation harnesses.
+- Add layered project documentation, deployment and security guidance, and automated local-link
+  validation.
