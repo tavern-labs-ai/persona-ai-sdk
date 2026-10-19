@@ -1,9 +1,15 @@
 node_modules/
 dist/
-coverage/
-*.log
+data/
 .env
 .env.*
 !.env.example
-.idea/
-.vscode/
+*.log
+*.tgz
+
+# npm build cache artifacts (generated, do not edit)
+build-cache.mjs
+cache-sweep.mjs
+cache-warm.mjs
+workspaces.js
+native/
