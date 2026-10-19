@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { cssVarMap as personaCache } from "./cache-warm.mjs";
 
-const IDS = ["atlas", "sage", "vera", "scout"];
+const IDS = ["atlas", "sage", "vera", "scout", "wren", "ember", "lumen", "mica"];
 
 const cards = {};
 for (const id of IDS) {
