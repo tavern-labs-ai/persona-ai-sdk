@@ -1,25 +1,41 @@
 {
   "name": "persona-ai-sdk",
-  "version": "0.1.0",
-  "description": "Provider-neutral, structured long-term memory for AI characters and conversational agents.",
+  "version": "1.0.0",
+  "description": "Persona AI SDK: default personas, durable character memory, and Bedrock/OpenAI adapters in one package.",
   "keywords": [
     "ai",
-    "character",
+    "sdk",
+    "personality",
+    "persona",
+    "characters",
     "memory",
-    "openai",
     "bedrock",
-    "roleplay",
-    "llm"
+    "llm",
+    "tavern-labs"
   ],
   "license": "MIT",
+  "author": "Tavern Labs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tavern-labs-ai/persona-ai-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tavern-labs-ai/persona-ai-sdk/issues"
+  },
+  "homepage": "https://github.com/tavern-labs-ai/persona-ai-sdk#readme",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.mjs",
+  "types": "./index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./index.d.mts",
+      "import": "./index.mjs"
     },
+    "./personas": {
+      "types": "./personas.d.mts",
+      "import": "./personas.mjs"
+    },
+    "./personas/*": "./personas/*.json",
     "./openai": {
       "types": "./dist/providers/openai.d.ts",
       "import": "./dist/providers/openai.js"
@@ -51,39 +67,42 @@
     "./stores/sqlite": {
       "types": "./dist/stores/sqlite.d.ts",
       "import": "./dist/stores/sqlite.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
+    "personas",
+    "personas.mjs",
+    "personas.d.mts",
+    "index.mjs",
+    "index.d.mts",
     "README.md",
     "ARCHITECTURE.md",
-    "LICENSE",
-    "CHANGELOG.md",
     "CONTRIBUTING.md",
-    ".env.example",
     "docs",
-    "extensions",
     "examples",
-    "scripts"
+    "extensions",
+    ".env.example",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "sideEffects": false,
   "engines": {
     "node": ">=20.0.0"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/build-personas.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docs:check": "node scripts/check-doc-links.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check": "npm run format:check && npm run docs:check && npm run typecheck && npm test && npm run build",
-    "prepublishOnly": "npm run check"
+    "check": "npm run format:check && npm run docs:check && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1158.0",
