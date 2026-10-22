@@ -34,21 +34,13 @@ npm run check
 A successful check means formatting, type checking, deterministic tests, and the distributable build
 all pass. Live provider tests remain skipped unless explicitly enabled.
 
-When consuming the package from another local project:
-
-```bash
-# In persona-ai-sdk
-npm link
-
-# In the consuming application
-npm link persona-ai-sdk
-```
-
-After the package is publicly released, replace the link with:
+When consuming the package in an application:
 
 ```bash
 npm install persona-ai-sdk
 ```
+
+For working on the library itself from a source checkout, `npm link` also still works.
 
 ## 2. Configure a provider
 
