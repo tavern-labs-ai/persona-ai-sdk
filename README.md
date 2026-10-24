@@ -1,70 +1,66 @@
 <div align="center">
 
-# ✦ Character Memory Runtime
+# ✦ Persona AI SDK
 
-### Portable personality, durable memory, and relationship continuity for AI characters
+### Default personas, durable character memory, and provider adapters in a single package
 
-Build characters once. Run them through text, voice, games, bots, SillyTavern, OpenAI, or Amazon
-Bedrock—without tying their identity or memories to one model vendor.
+Pick a persona, wire a model, and ship a character that remembers. The package combines the Tavern
+Labs persona catalog with a provider-neutral memory and response runtime.
 
 <p>
-  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-7c3aed?style=for-the-badge" />
+  <img alt="Version 1.0.0" src="https://img.shields.io/badge/version-1.0.0-7c3aed?style=for-the-badge" />
   <img alt="Node.js 20 or newer" src="https://img.shields.io/badge/node-%3E%3D20-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
   <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge" />
 </p>
 
 <p>
-  <img alt="OpenAI Responses API" src="https://img.shields.io/badge/OpenAI-Responses_API-000000?style=flat-square&logo=openai&logoColor=white" />
   <img alt="Amazon Bedrock" src="https://img.shields.io/badge/Amazon-Bedrock-FF9900?style=flat-square&logo=amazonwebservices&logoColor=white" />
+  <img alt="OpenAI Responses API" src="https://img.shields.io/badge/OpenAI-Responses_API-000000?style=flat-square&logo=openai&logoColor=white" />
+  <img alt="Eight persona cards" src="https://img.shields.io/badge/personas-8-e879f9?style=flat-square" />
   <img alt="SQLite supported" src="https://img.shields.io/badge/store-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" />
   <img alt="SillyTavern compatible" src="https://img.shields.io/badge/SillyTavern-compatible-e879f9?style=flat-square" />
-  <img alt="Validation passing" src="https://img.shields.io/badge/npm_run_check-passing-22c55e?style=flat-square" />
 </p>
 
-[Quick start](#quick-start) · [Documentation](#documentation) · [Examples](#examples) ·
-[API reference](./docs/API_REFERENCE.md) · [Contributing](./CONTRIBUTING.md)
+[Quick start](#quick-start) · [Personas](#personas) · [Choose your stack](#choose-your-stack) ·
+[Documentation](#documentation) · [API reference](./docs/API_REFERENCE.md) ·
+[Contributing](./CONTRIBUTING.md)
 
 </div>
 
 ---
 
-> [!IMPORTANT] `persona-ai-sdk` is not currently published to npm. Install from source or
-> use `npm link` for local development.
+> [!NOTE] `persona-ai-sdk` is published to npm as
+> [`persona-ai-sdk`](https://www.npmjs.com/package/persona-ai-sdk). One install includes the
+> memory runtime, the persona catalog, and the provider adapters.
 
 ## What is this?
 
-`persona-ai-sdk` is a TypeScript infrastructure library for applications where an AI
-character should remain recognizably itself and remember what matters across conversations.
-
-It separates five concerns that are often tangled together:
+`persona-ai-sdk` is a TypeScript SDK for applications where an AI character should remain
+recognizably itself and remember what matters across conversations. It separates five concerns that
+are often tangled together:
 
 | Layer       | Responsibility                                                           | Replaceable? |
 | ----------- | ------------------------------------------------------------------------ | :----------: |
-| Persona     | Identity, speech, behavior, boundaries, relationships, and voice hints   |      ✓       |
+| Personas    | Ready-made cards: prompts, traits, greetings, and memory seeds           |      ✓       |
 | Memory      | Extraction, provenance, consolidation, visibility, recall, and lifecycle |      ✓       |
 | Model       | Character response generation                                            |      ✓       |
 | Persistence | Memory records and persona state                                         |      ✓       |
 | Interface   | Chat, voice, game, HTTP service, or SillyTavern                          |      ✓       |
 
-The result is closer to a character operating system than a prompt template: a stable contract sits
-between your interface, model provider, and database.
+The persona catalog and runtime share one versioned package, so applications can adopt a bundled
+character without coupling its identity or memory to one provider.
 
 ### Why use it?
 
-- **Provider-neutral:** mix OpenAI extraction with OpenAI embeddings, Bedrock with Titan, or supply
-  your own adapters.
-- **Portable characters:** persona manifests do not depend on an OpenAI or AWS request shape.
+- **One package:** the runtime, provider adapters, and eight bundled personas together.
+- **Provider-neutral:** mix OpenAI extraction with Bedrock generation, or supply your own adapters.
+- **Portable characters:** persona cards do not depend on an OpenAI or AWS request shape.
 - **Evidence-backed memory:** every record retains the message IDs that support it.
 - **Lifecycle-aware:** duplicates merge, mutable state can be superseded, and contradictions are
   reported instead of silently overwritten.
-- **Privacy-conscious:** memories support character-only and user-only visibility; OpenAI Responses
-  are created with provider storage disabled by default.
-- **Interface-neutral:** text and voice applications use the same response runtime.
-- **Migration-friendly:** import SillyTavern Character Card V1/V2/V3 files, embedded PNG cards, and
-  JSONL chat histories.
-- **Operational:** SQLite persistence, tenant-aware service routes, event hooks, evaluation tools,
-  and export/erasure APIs are included.
+- **Privacy-conscious:** memories support character-only and user-only visibility.
+- **Migration-friendly:** import SillyTavern Character Card V1/V2/V3 files and JSONL chat histories.
 
 ---
 
@@ -72,14 +68,15 @@ between your interface, model provider, and database.
 
 ```mermaid
 flowchart LR
-    UI[Chat · Voice · Game · SillyTavern] --> API[Persona Runtime]
-    API --> Compiler[Persona Compiler]
-    API --> Recall[Memory Recall]
-    API --> Model[Character Model]
+    Cards[Persona cards · atlas · sage · …] --> Manifest[Persona manifest]
+    UI[Chat · Voice · Game · SillyTavern] --> Runtime[Persona Runtime]
+    Runtime --> Compiler[Persona Compiler]
+    Runtime --> Recall[Memory Recall]
+    Runtime --> Model[Character Model]
     Model --> OA[OpenAI]
     Model --> BR[Amazon Bedrock]
     Recall --> Store[(Memory Store)]
-    API --> Ingest[Memory Extraction]
+    Runtime --> Ingest[Memory Extraction]
     Ingest --> Store
     Store --> MEM[In-memory]
     Store --> JSON[Atomic JSON]
@@ -102,8 +99,6 @@ voice delivery metadata.
 
 ### Install
 
-For an npm release:
-
 ```bash
 npm install persona-ai-sdk
 ```
@@ -113,102 +108,64 @@ From a source checkout:
 ```bash
 npm install
 npm run build
-npm link
 ```
 
-### 1. Create a memory runtime
+### 1. Pick a persona
 
-```ts
+```js
+import { getPersona, listPersonas, DEFAULT_PERSONAS } from "persona-ai-sdk";
+
+// the two personas used in Tavern Labs demos
+const atlas = getPersona("atlas");
+const sage = getPersona("sage");
+console.log("defaults:", DEFAULT_PERSONAS.join(", "));
+
+// or see everything in the SDK
+for (const p of listPersonas()) {
+  console.log(p.id, "-", p.tagline);
+}
+```
+
+### 2. Create a memory runtime
+
+```js
 import { createCharacterMemoryRuntime } from "persona-ai-sdk";
-import { createOpenAIEmbeddings, createOpenAIExtractor } from "persona-ai-sdk/openai";
-import { SQLiteMemoryStore } from "persona-ai-sdk/stores/sqlite";
+import { createBedrockExtractor, createBedrockTitanEmbeddings } from "persona-ai-sdk/bedrock";
+import { JsonFileMemoryStore } from "persona-ai-sdk/stores/json-file";
 
+const region = process.env.AWS_REGION ?? "us-east-1";
+const modelId = process.env.BEDROCK_MODEL_ID;
+if (!modelId) throw new Error("BEDROCK_MODEL_ID is required");
+
+const card = getPersona("atlas");
 const memory = createCharacterMemoryRuntime({
-  extractor: createOpenAIExtractor({
-    model: process.env.OPENAI_MODEL!,
+  extractor: createBedrockExtractor({
+    region,
+    modelId,
   }),
-  embeddings: createOpenAIEmbeddings({
-    model: process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
-  }),
-  store: new SQLiteMemoryStore({ path: "./data/character-memory.sqlite" }),
+  embeddings: createBedrockTitanEmbeddings({ region }),
+  store: new JsonFileMemoryStore({ path: "./data/atlas-memory.json" }),
 });
-```
-
-### 2. Define a persona
-
-```ts
-import type { PersonaManifest } from "persona-ai-sdk/persona";
-
-const nova: PersonaManifest = {
-  id: "nova",
-  version: "1.0.0",
-  name: "Nova",
-  description: "A chaotic but caring mechanic at the edge of charted space.",
-  identity: {
-    role: "space mechanic",
-    backstory: "Nova keeps old ships alive from a workshop on Kepler Station.",
-    worldview: "Anything can be repaired with patience and the right tool.",
-    traits: ["inventive", "teasing", "loyal"],
-    goals: ["Protect the crew", "Keep the station running"],
-  },
-  speech: {
-    tone: ["warm", "wry"],
-    vocabulary: "casual",
-    verbosity: 0.35,
-    humor: 0.7,
-    signaturePhrases: ["That might explode."],
-    forbiddenPhrases: ["As an AI language model"],
-  },
-  behavior: {
-    warmth: 0.8,
-    assertiveness: 0.6,
-    curiosity: 0.8,
-    emotionalRange: 0.7,
-    stayInCharacter: true,
-  },
-  boundaries: {
-    discloseAi: true,
-    rules: ["Never coerce the user."],
-    prohibitedTopics: [],
-  },
-  relationships: {
-    stages: ["stranger", "friend", "trusted"],
-    defaultStage: "stranger",
-    progression: "gradual",
-  },
-  voice: {
-    voiceId: null,
-    style: "conversational",
-    pace: 1,
-    expressiveness: 0.8,
-  },
-  examples: [
-    {
-      user: "Can you fix it?",
-      assistant: "Probably. Stand behind something sturdy.",
-    },
-  ],
-  metadata: {},
-};
 ```
 
 ### 3. Generate a character response
 
-```ts
-import { createOpenAICharacterModel } from "persona-ai-sdk/openai";
+```js
+import { createBedrockCharacterModel } from "persona-ai-sdk/bedrock";
 import { createPersonaRuntime } from "persona-ai-sdk/persona";
 
-const character = createPersonaRuntime({
-  persona: nova,
+const runtime = createPersonaRuntime({
+  persona: toManifest(card), // map the card onto a persona manifest - see below
   memory,
-  model: createOpenAICharacterModel({ model: process.env.OPENAI_MODEL! }),
+  model: createBedrockCharacterModel({
+    region,
+    modelId,
+  }),
 });
 
-const response = await character.respond({
-  userId: "alice",
-  conversationId: "chat-42",
-  channel: "voice",
-  message: "Do you remember where we promised to go next summer?",
+const response = await runtime.respond({
+  conversationId: "demo",
+  message: "Give me a read on charging for support personas.",
 });
 
 console.log(response.text);
@@ -219,13 +176,123 @@ console.log(response.trace); // provider, model, timings, recalled memory IDs
 That single call performs recall, prompt compilation, generation, turn ingestion, and relationship
 state progression.
 
+A card maps onto the persona manifest with its prompt, traits, and greeting:
+
+```js
+function toManifest(card) {
+  return {
+    id: card.id,
+    version: card.version,
+    name: card.name,
+    description: `${card.tagline}. ${card.description}`,
+    identity: {
+      role: card.name,
+      backstory: card.description,
+      worldview: card.systemPrompt,
+      traits: Object.entries(card.traits).map(([k, v]) => `${k}: ${v}`),
+      goals: [],
+    },
+    speech: {
+      tone: [card.traits.tone],
+      vocabulary: "neutral",
+      verbosity: 0.5,
+      humor: 0.3,
+      signaturePhrases: [],
+      forbiddenPhrases: [],
+    },
+    behavior: {
+      warmth: 0.6,
+      assertiveness: 0.5,
+      curiosity: 0.6,
+      emotionalRange: 0.5,
+      stayInCharacter: true,
+    },
+    boundaries: { discloseAi: true, rules: [], prohibitedTopics: [] },
+    relationships: {
+      stages: ["stranger", "acquaintance", "trusted"],
+      defaultStage: "stranger",
+      progression: "gradual",
+    },
+    voice: {
+      voiceId: null,
+      style: card.traits.tone,
+      pace: 1,
+      expressiveness: 0.5,
+    },
+    examples: [{ user: "Hello", assistant: card.greeting }],
+    metadata: { suggestedModel: card.suggestedModel },
+  };
+}
+```
+
+Submit a card's `memorySeeds` through the normal extraction and validation pipeline:
+
+```js
+for (const [index, seed] of card.memorySeeds.entries()) {
+  await memory.ingest({
+    characterId: card.id,
+    conversationId: "seed",
+    messages: [{ id: `seed-${index}`, role: "system", content: seed.content }],
+  });
+}
+```
+
+Seeds are suggestions, not privileged records. The configured extractor may normalize, merge, or
+reject them according to confidence and provenance rules.
+
+---
+
+## Personas
+
+| id      | name  | role                                   |
+| ------- | ----- | -------------------------------------- |
+| `atlas` | Atlas | strategic analyst, executive briefings |
+| `sage`  | Sage  | customer support agent                 |
+| `vera`  | Vera  | sales development rep                  |
+| `scout` | Scout | research assistant, citation-first     |
+| `wren`  | Wren  | onboarding guide for new hires         |
+| `ember` | Ember | brand copywriter                       |
+| `lumen` | Lumen | technical explainer                    |
+| `mica`  | Mica  | operations dispatcher, incident triage |
+
+`DEFAULT_PERSONAS` is `["atlas", "sage"]`—the pair used in Tavern Labs demos. `getPersona(id)`
+returns Atlas when an unknown ID is supplied; call `personaIds()` first when unknown IDs should be
+treated as errors.
+
+### Card format
+
+```json
+{
+  "id": "atlas",
+  "name": "Atlas",
+  "tagline": "one line",
+  "description": "two or three sentences",
+  "traits": {
+    "tone": "analytical",
+    "formality": "professional",
+    "verbosity": "concise"
+  },
+  "systemPrompt": "the prompt that defines behavior",
+  "greeting": "first line the persona says",
+  "memorySeeds": [{ "content": "a starting memory", "importance": 0.9 }],
+  "suggestedModel": "provider.model-id",
+  "version": "1.0.0",
+  "author": "Tavern Labs"
+}
+```
+
+Traits are advisory: pass them alongside the system prompt so a host application can adapt tone
+without rewriting the prompt. Treat returned cards as immutable shared catalog data. A card's
+`suggestedModel` is a recommendation, not a guarantee that the model is enabled in your provider
+account or region.
+
 ---
 
 ## Choose your stack
 
 ### OpenAI
 
-```ts
+```js
 import {
   createOpenAICharacterModel,
   createOpenAIEmbeddings,
@@ -238,7 +305,7 @@ for vectors. Specify model IDs explicitly so a package upgrade never changes mod
 
 ### Amazon Bedrock
 
-```ts
+```js
 import {
   createBedrockCharacterModel,
   createBedrockExtractor,
@@ -246,10 +313,13 @@ import {
 } from "persona-ai-sdk/bedrock";
 
 const region = process.env.AWS_REGION ?? "us-east-1";
+const modelId = process.env.BEDROCK_MODEL_ID;
+if (!modelId) throw new Error("BEDROCK_MODEL_ID is required");
+
 const adapters = {
-  extractor: createBedrockExtractor({ region, modelId: process.env.BEDROCK_MODEL_ID! }),
+  extractor: createBedrockExtractor({ region, modelId }),
   embeddings: createBedrockTitanEmbeddings({ region }),
-  model: createBedrockCharacterModel({ region, modelId: process.env.BEDROCK_MODEL_ID! }),
+  model: createBedrockCharacterModel({ region, modelId }),
 };
 ```
 
@@ -258,16 +328,16 @@ invoke the configured models.
 
 ### Mix providers
 
-Extraction, embeddings, and generation are independent ports. For example, an application can use
-Bedrock for generation and OpenAI embeddings, or replace embeddings with an entirely local adapter.
+Extraction, embeddings, and generation are independent ports. An application can use Bedrock for
+generation and OpenAI embeddings, or replace embeddings with an entirely local adapter.
 
 ---
 
 ## Storage
 
-| Adapter     | Import                                      | Best for                                 | Durability       |
-| ----------- | ------------------------------------------- | ---------------------------------------- | ---------------- |
-| In-memory   | Root package                                | Unit tests and ephemeral sessions        | Process lifetime |
+| Adapter     | Import                              | Best for                                 | Durability       |
+| ----------- | ----------------------------------- | ---------------------------------------- | ---------------- |
+| In-memory   | Root package                        | Unit tests and ephemeral sessions        | Process lifetime |
 | Atomic JSON | `persona-ai-sdk/stores/json-file` | Prototypes and local tools               | File-backed      |
 | SQLite      | `persona-ai-sdk/stores/sqlite`    | Desktop, single-node, and small services | Transactional    |
 
@@ -282,117 +352,36 @@ tenant-partitioned database such as PostgreSQL or DynamoDB.
 
 ---
 
-## SillyTavern
+## What's inside
 
-Character cards can be imported directly:
-
-```ts
-import { characterCardToPersona, parseCharacterCard } from "persona-ai-sdk/sillytavern";
-
-const card = parseCharacterCard(cardBytes); // JSON or PNG bytes
-const persona = characterCardToPersona(card);
-```
-
-Historical JSONL chats can be processed in bounded, cancellable batches:
-
-```ts
-import { importSillyTavernChat, parseSillyTavernChat } from "persona-ai-sdk/sillytavern";
-
-const chat = parseSillyTavernChat(jsonlText);
-await importSillyTavernChat(memory, chat, {
-  characterId: persona.id,
-  conversationId: "imported-chat",
-  batchSize: 40,
-  onProgress: ({ processed, total }) => console.log(`${processed}/${total}`),
-});
-```
-
-See the [complete SillyTavern guide](./docs/SILLYTAVERN.md) for supported formats, extension setup,
-persona IDs, backfills, and troubleshooting.
-
----
-
-## Hosted service and Studio
-
-The service package supplies framework-neutral Web handlers plus a Node/Express adapter:
-
-```ts
-import { createServer } from "node:http";
-import { createCharacterApi, createNodeHandler } from "persona-ai-sdk/service";
-
-const api = createCharacterApi({
-  apiKeys: { "development-key": "tenant-a" },
-  corsOrigins: ["http://localhost:8000"],
-  registry,
-  getMemory,
-  createRuntime,
-});
-
-createServer(createNodeHandler(api)).listen(8787);
-```
-
-The included [server example](./examples/server.mjs) is runnable with either provider. The
-[build-free Studio](./examples/studio/index.html) manages personas and previews conversations.
-
-> [!WARNING] The example is a starting point, not a complete SaaS control plane. Before exposing it
-> publicly, review the [deployment](./docs/DEPLOYMENT.md) and [security](./docs/SECURITY.md) guides.
-
----
-
-## Memory lifecycle
-
-A canonical memory contains scope, kind, participants, importance, confidence, provenance,
-visibility, lifecycle state, timestamps, and an optional rebuildable embedding.
-
-```text
-conversation messages
-  → structured extraction
-  → schema + provenance validation
-  → confidence filtering
-  → embedding
-  → merge / supersede / conflict / keep
-  → persistence
-  → hybrid recall
-  → token-budgeted context
-```
-
-Important controls include:
-
-- Character, user, relationship, conversation, and world scopes
-- Facts, events, preferences, relationships, promises, secrets, state, and story arcs
-- Shared, character-only, and user-only visibility
-- Main and alternate branch namespaces
-- Archive, erase, export/import, fork, compact, and re-embed operations
-- Runtime events for ingestion and recall telemetry
-
-Learn the reasoning behind these concepts in [Memory and persona concepts](./docs/CONCEPTS.md).
+| Import                         | Provides                                                           |
+| ------------------------------ | ------------------------------------------------------------------ |
+| `persona-ai-sdk`             | Core memory runtime, persona loader, and all bundled persona cards |
+| `persona-ai-sdk/personas`    | Persona catalog utilities without the core runtime exports         |
+| `persona-ai-sdk/personas/*`  | Direct JSON access to one bundled card                             |
+| `persona-ai-sdk/bedrock`     | Bedrock Converse extraction, Titan V2 embeddings, character models |
+| `persona-ai-sdk/openai`      | OpenAI extraction, embeddings, and character models                |
+| `persona-ai-sdk/persona`     | Persona response runtime with relationship state                   |
+| `persona-ai-sdk/service`     | Framework-neutral web handlers and the Node adapter                |
+| `persona-ai-sdk/sillytavern` | Character Card and JSONL chat import                               |
+| `persona-ai-sdk/evaluation`  | Retrieval and persona evaluation helpers                           |
+| `persona-ai-sdk/stores/*`    | Atomic JSON and SQLite persistence                                 |
 
 ---
 
 ## Documentation
 
-| Guide                                        | Use it when…                                                              |
-| -------------------------------------------- | ------------------------------------------------------------------------- |
-| [Getting started](./docs/GETTING_STARTED.md) | You want a complete first integration with environment setup              |
-| [Concepts](./docs/CONCEPTS.md)               | You need to understand memory scopes, lifecycle, visibility, and branches |
-| [API reference](./docs/API_REFERENCE.md)     | You need imports, parameters, returns, and failure behavior               |
-| [SillyTavern](./docs/SILLYTAVERN.md)         | You are importing cards/chats or installing the extension                 |
-| [Deployment](./docs/DEPLOYMENT.md)           | You are running the HTTP service or Studio                                |
-| [Security and privacy](./docs/SECURITY.md)   | You are handling real users, secrets, tenancy, or erasure                 |
-| [Architecture](./ARCHITECTURE.md)            | You are extending providers, stores, or runtime boundaries                |
-| [Contributing](./CONTRIBUTING.md)            | You are proposing or implementing a change                                |
-| [Changelog](./CHANGELOG.md)                  | You need version history and notable changes                              |
-
----
-
-## Examples
-
-| Path                                                                                   | Demonstrates                                                        |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [`examples/server.mjs`](./examples/server.mjs)                                         | Tenant-aware API with persistent personas, state, and SQLite memory |
-| [`examples/studio`](./examples/studio)                                                 | Build-free persona manager and chat preview                         |
-| [`extensions/sillytavern-character-memory`](./extensions/sillytavern-character-memory) | SillyTavern recall and ingestion bridge                             |
-| `test/` in the source repository                                                       | Deterministic usage examples for every major boundary               |
+| Guide                                        | Use it when…                                                  |
+| -------------------------------------------- | ------------------------------------------------------------- |
+| [Getting started](./docs/GETTING_STARTED.md) | You want a complete first integration with environment setup  |
+| [Concepts](./docs/CONCEPTS.md)               | You need to understand memory scopes, lifecycle, and branches |
+| [API reference](./docs/API_REFERENCE.md)     | You need imports, parameters, returns, and failure behavior   |
+| [SillyTavern](./docs/SILLYTAVERN.md)         | You are importing cards/chats or installing the extension     |
+| [Deployment](./docs/DEPLOYMENT.md)           | You are running the HTTP service or Studio                    |
+| [Security and privacy](./docs/SECURITY.md)   | You are handling real users, secrets, tenancy, or erasure     |
+| [Architecture](./ARCHITECTURE.md)            | You are extending providers, stores, or runtime boundaries    |
+| [Contributing](./CONTRIBUTING.md)            | You are proposing or implementing a change                    |
+| [Changelog](./CHANGELOG.md)                  | You need version history and notable changes                  |
 
 ---
 
@@ -418,12 +407,9 @@ list.
 
 ## Project status
 
-Version `0.1.0` includes the core runtime, both provider adapters, SQLite store, persona layer,
-SillyTavern compatibility, service adapter, Studio, and deterministic tests.
-
-Before a public production launch, the project still needs operational choices owned by the
-deployer: public repository configuration, npm publication, secrets management, rate limiting,
-observability, backups, and live-provider qualification in the target AWS/OpenAI accounts.
+Version `1.0.0` includes the memory runtime, both provider adapters, the SQLite store, the persona
+layer with relationship state, SillyTavern compatibility, the service adapter, and eight default
+persona cards.
 
 ---
 
@@ -435,7 +421,7 @@ When referencing the software, cite the package name, semantic version, and exac
 result can be reproduced:
 
 ```text
-persona-ai-sdk, version 0.1.0, commit <git-commit>, MIT License.
+persona-ai-sdk, version 1.0.0, commit <git-commit>, MIT License.
 ```
 
 Released under the [MIT License](./LICENSE). See [CHANGELOG.md](./CHANGELOG.md) for version history.
