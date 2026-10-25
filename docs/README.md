@@ -32,7 +32,7 @@ and version history.
 - Examples target Node.js 20+, ESM, and strict TypeScript.
 - Values beginning with `<` and ending with `>` are placeholders.
 - Destructive examples are called out explicitly.
-- Public API details describe version `0.1.0` and should change with the code.
+- Public API details describe version `1.0.0` and should change with the code.
 - Provider model availability, pricing, and account policy can change; verify those with the
   provider.
 

@@ -1,4 +1,14 @@
+<div align="center">
+
 # Architecture
+
+Internal boundaries and extension rules for `persona-ai-sdk`.
+
+[README](./README.md) · [Documentation](./docs/README.md) · [API reference](./docs/API_REFERENCE.md)
+
+</div>
+
+---
 
 ## Design goals
 
@@ -9,6 +19,9 @@ The dependency rule is:
 
 ```text
 application
+    |
+    v
+bundled persona card ---> persona manifest
     |
     v
 persona runtime ---> character model <--- OpenAI / Bedrock adapters
@@ -25,6 +38,15 @@ Core code does not import OpenAI, AWS, or filesystem modules. Vendor and persist
 depend inward on core contracts.
 
 ## Modules
+
+### Persona catalog
+
+`personas/*.json` contains the versioned Tavern Labs cards. `src/personas.mjs` loads the catalog and
+exports full-card lookup, ID listing, summaries, and the default pair. The build copies the loader
+to the package root, where it is re-exported alongside the core runtime.
+
+Persona cards are product defaults rather than canonical memory records. Applications map a card's
+prompt, traits, greeting, and memory seeds onto their own persona manifest and seeding policy.
 
 ### Core
 
@@ -121,11 +143,13 @@ measures retrieval hit rate/MRR and aggregates deterministic drift checks.
 
 ## Package exports
 
-The root export contains only core and the in-memory store. Heavy or environment-specific adapters
-use explicit subpaths:
+The root export contains core, the in-memory store, and the bundled persona catalog. Heavy or
+environment-specific adapters use explicit subpaths:
 
 ```text
 persona-ai-sdk
+persona-ai-sdk/personas
+persona-ai-sdk/personas/*
 persona-ai-sdk/openai
 persona-ai-sdk/bedrock
 persona-ai-sdk/stores/json-file

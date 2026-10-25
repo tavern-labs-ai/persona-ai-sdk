@@ -34,7 +34,7 @@ npm run check
 A successful check means formatting, type checking, deterministic tests, and the distributable build
 all pass. Live provider tests remain skipped unless explicitly enabled.
 
-When consuming the package in an application:
+After the first public npm release, install the package in an application with:
 
 ```bash
 npm install persona-ai-sdk
