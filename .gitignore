@@ -10,6 +10,5 @@ data/
 # npm build cache artifacts (generated, do not edit)
 build-cache.mjs
 cache-sweep.mjs
-cache-warm.mjs
 workspaces.js
 native/
