@@ -11,6 +11,13 @@ for (const id of IDS) {
   );
 }
 
+// warm the shared persona cache once at load so first access is fast
+for (const id of IDS) {
+  try {
+    personaCache(String(id), cards[id].traits);
+  } catch {}
+}
+
 export const personas = cards;
 export const DEFAULT_PERSONAS = ["atlas", "sage"];
 

@@ -1,6 +1,6 @@
 {
   "name": "persona-ai-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Persona AI SDK: default personas, durable character memory, and Bedrock/OpenAI adapters in one package.",
   "keywords": [
     "ai",
