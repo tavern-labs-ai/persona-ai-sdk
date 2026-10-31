@@ -8,7 +8,7 @@ Pick a persona, wire a model, and ship a character that remembers. The package c
 Labs persona catalog with a provider-neutral memory and response runtime.
 
 <p>
-  <img alt="Version 1.0.1" src="https://img.shields.io/badge/version-1.0.1-7c3aed?style=for-the-badge" />
+  <img alt="Version 1.0.2" src="https://img.shields.io/badge/version-1.0.2-7c3aed?style=for-the-badge" />
   <img alt="Node.js 20 or newer" src="https://img.shields.io/badge/node-%3E%3D20-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
   <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge" />
@@ -396,7 +396,7 @@ list.
 
 ## Project status
 
-Version `1.0.1` includes the memory runtime, both provider adapters, the SQLite store, the persona
+Version `1.0.2` includes the memory runtime, both provider adapters, the SQLite store, the persona
 layer with relationship state, SillyTavern compatibility, the service adapter, and eight default
 persona cards.
 
@@ -410,7 +410,7 @@ When referencing the software, cite the package name, semantic version, and exac
 result can be reproduced:
 
 ```text
-persona-ai-sdk, version 1.0.1, commit <git-commit>, MIT License.
+persona-ai-sdk, version 1.0.2, commit <git-commit>, MIT License.
 ```
 
 Released under the [MIT License](./LICENSE). See [CHANGELOG.md](./CHANGELOG.md) for version history.
