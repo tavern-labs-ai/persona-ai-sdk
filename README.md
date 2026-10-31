@@ -51,17 +51,6 @@ are often tangled together:
 The persona catalog and runtime share one versioned package, so applications can adopt a bundled
 character without coupling its identity or memory to one provider.
 
-### Why use it?
-
-- **One package:** the runtime, provider adapters, and eight bundled personas together.
-- **Provider-neutral:** mix OpenAI extraction with Bedrock generation, or supply your own adapters.
-- **Portable characters:** persona cards do not depend on an OpenAI or AWS request shape.
-- **Evidence-backed memory:** every record retains the message IDs that support it.
-- **Lifecycle-aware:** duplicates merge, mutable state can be superseded, and contradictions are
-  reported instead of silently overwritten.
-- **Privacy-conscious:** memories support character-only and user-only visibility.
-- **Migration-friendly:** import SillyTavern Character Card V1/V2/V3 files and JSONL chat histories.
-
 ---
 
 ## How it fits together
