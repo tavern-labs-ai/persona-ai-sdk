@@ -12,8 +12,8 @@ Public imports, parameters, returns, and failure behavior for version `1.0.0`.
 
 ## Package exports
 
-| Import path                         | Contents                                                 | Runtime environment            |
-| ----------------------------------- | -------------------------------------------------------- | ------------------------------ |
+| Import path                       | Contents                                                 | Runtime environment            |
+| --------------------------------- | -------------------------------------------------------- | ------------------------------ |
 | `persona-ai-sdk`                  | Core runtime plus bundled persona catalog                | Node or compatible ESM runtime |
 | `persona-ai-sdk/personas`         | Bundled persona catalog and lookup helpers               | Node/server                    |
 | `persona-ai-sdk/personas/*`       | Direct JSON access to individual persona cards           | Node/server                    |

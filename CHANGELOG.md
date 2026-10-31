@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.2 - 2026-10-31
+## 1.0.3 - 2026-10-31
 
 - Strict persona catalog types: bundled persona ids are a `PersonaId` union; cards, summaries, and
   catalogs are readonly; `listPersonas` and `personaIds` return typed results.
